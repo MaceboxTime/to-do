@@ -1,39 +1,6 @@
-import csv
-import os
 import tkinter as tk
 from tkinter import messagebox
-
-todo_file = "todo_list.csv"
-
-
-def load_tasks():
-    if not os.path.exists(todo_file):
-        return []
-    with open(todo_file, "r") as file:
-        reader = csv.reader(file)
-        return list(reader)
-
-
-def save_tasks(tasks):
-    with open(todo_file, "w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(tasks)
-
-
-def add_task():
-    title = title_entry.get()
-    description = desc_entry.get()
-    due_date = due_date_entry.get()
-    if title and due_date:
-        tasks = load_tasks()
-        tasks.append([title, description, due_date, "Pending"])
-        save_tasks(tasks)
-        update_list()
-        title_entry.delete(0, tk.END)
-        desc_entry.delete(0, tk.END)
-        due_date_entry.delete(0, tk.END)
-    else:
-        messagebox.showerror("Error", "Title and Due Date are required!")
+from task_manager import add_task, delete_task, mark_complete, update_task, load_tasks
 
 
 def update_list():
@@ -43,29 +10,39 @@ def update_list():
         task_list.insert(tk.END, f"{i}. {task[0]} - {task[1]} (Due: {task[2]}) [{task[3]}]")
 
 
-def delete_task():
+def add_task_gui():
+    title = title_entry.get()
+    description = desc_entry.get()
+    due_date = due_date_entry.get()
+    if title and due_date:
+        add_task(title, description, due_date)
+        update_list()
+        title_entry.delete(0, tk.END)
+        desc_entry.delete(0, tk.END)
+        due_date_entry.delete(0, tk.END)
+    else:
+        messagebox.showerror("Error", "Title and Due Date are required!")
+
+
+def delete_task_gui():
     selected = task_list.curselection()
     if selected:
-        tasks = load_tasks()
-        del tasks[selected[0]]
-        save_tasks(tasks)
+        delete_task(selected[0])
         update_list()
     else:
         messagebox.showerror("Error", "Please select a task to delete!")
 
 
-def mark_complete():
+def mark_complete_gui():
     selected = task_list.curselection()
     if selected:
-        tasks = load_tasks()
-        tasks[selected[0]][3] = "Completed"
-        save_tasks(tasks)
+        mark_complete(selected[0])
         update_list()
     else:
         messagebox.showerror("Error", "Please select a task to mark as complete!")
 
 
-def update_task():
+def update_task_gui():
     selected = task_list.curselection()
     if selected:
         index = selected[0]
@@ -78,8 +55,7 @@ def update_task():
         due_date_entry.insert(0, tasks[index][2])
 
         def save_update():
-            tasks[index] = [title_entry.get(), desc_entry.get(), due_date_entry.get(), tasks[index][3]]
-            save_tasks(tasks)
+            update_task(index, title_entry.get(), desc_entry.get(), due_date_entry.get())
             update_list()
             update_window.destroy()
 
@@ -96,7 +72,6 @@ def update_task():
         messagebox.showerror("Error", "Please select a task to update!")
 
 
-# Tkinter GUI
 root = tk.Tk()
 root.title("To-Do List Manager")
 
@@ -118,20 +93,20 @@ due_date_label.grid(row=2, column=0)
 due_date_entry = tk.Entry(frame)
 due_date_entry.grid(row=2, column=1)
 
-add_button = tk.Button(frame, text="Add Task", command=add_task)
+add_button = tk.Button(frame, text="Add Task", command=add_task_gui)
 add_button.grid(row=3, column=0, columnspan=2, pady=5)
 
 task_list = tk.Listbox(root, width=50)
 task_list.pack(pady=10)
 
-delete_button = tk.Button(root, text="Delete Task", command=delete_task)
+delete_button = tk.Button(root, text="Delete Task", command=delete_task_gui)
 delete_button.pack()
 
-complete_button = tk.Button(root, text="Mark Complete", command=mark_complete)
+complete_button = tk.Button(root, text="Mark Complete", command=mark_complete_gui)
 complete_button.pack()
 
-# update_button = tk.Button(root, text="Update Task", command=update_task)
-# update_button.pack()
+update_button = tk.Button(root, text="Update Task", command=update_task_gui)
+update_button.pack()
 
 update_list()
 
